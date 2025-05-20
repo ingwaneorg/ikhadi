@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Poker - Session</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/poker.css') }}">
+</head>
+<body>
+    <div class="main learner">
+        <div class="panel">
+            <div class="row row1">
+                <h1>Planning Poker</h1>
+                <div class="col-gap"></div>
+                <span class="session-id" id="session-id">Session: {{ session_id }}</span>
+            </div>
+            
+            <div class="row-gap"></div>
+            
+            <!-- User registration (shown initially) -->
+            <div id="registration-section" class="section">
+                <h2>Join Session</h2>
+                <div class="row-gap"></div>
+                
+                <div class="row">
+                    <input type="text" id="name-input" placeholder="Enter your name" maxlength="20" required>
+                </div>
+                <div class="row-gap"></div>
+                <div class="row">
+                    <button id="join-btn" class="button1" onclick="joinSession()">Join</button>
+                </div>
+            </div>
+            
+            <!-- Main session (hidden initially) -->
+            <div id="session-section" class="section" style="display: none;">
+                <!-- Current Story -->
+                <div class="story-container">
+                    <h2>Current Story</h2>
+                    <div class="row-gap"></div>
+                    <div id="current-story-display" class="story-card">
+                        <p id="current-story-text">Waiting for the facilitator to set a story...</p>
+                    </div>
+                </div>
+                
+                <div class="section-gap"></div>
+                
+                <!-- Card Selection -->
+                <div class="voting-container">
+                    <h2>Your Vote</h2>
+                    <div class="row-gap"></div>
+                    <div id="cards-container" class="cards-container">
+                        <div class="poker-card" data-value="0">0</div>
+                        <div class="poker-card" data-value="1">1</div>
+                        <div class="poker-card" data-value="2">2</div>
+                        <div class="poker-card" data-value="3">3</div>
+                        <div class="poker-card" data-value="5">5</div>
+                        <div class="poker-card" data-value="8">8</div>
+                        <div class="poker-card" data-value="13">13</div>
+                        <div class="poker-card" data-value="21">21</div>
+                        <div class="poker-card" data-value="34">34</div>
+                        <div class="poker-card" data-value="55">55</div>
+                        <div class="poker-card" data-value="?">?</div>
+                        <div class="poker-card coffee-card" data-value="coffee">☕</div>
+                    </div>
+                    <div class="row-gap"></div>
+                    <div id="vote-status" class="alert" style="display: none;">
+                        Your vote: <strong id="current-vote-value"></strong>
+                    </div>
+                </div>
+                
+                <div class="section-gap"></div>
+                
+                <!-- Status and Voting Information -->
+                <div class="status-container">
+                    <h2>Session Status</h2>
+                    <div class="row-gap"></div>
+                    <div id="round-info">Round: <span id="round-number">1</span></div>
+                    <div class="row-gap"></div>
+                    <div id="status-text">0 of 0 participants have voted</div>
+                    <div class="row-gap"></div>
+                    <div id="reveal-status">
+                        <span id="waiting-message">Waiting for facilitator to reveal votes...</span>
+                    </div>
+                </div>
+                
+                <div class="section-gap"></div>
+                
+                <!-- Results (initially hidden, shown when revealed) -->
+                <div id="results-container" class="results-container" style="display: none;">
+                    <h2>Results</h2>
+                    <div class="row-gap"></div>
+                    <div id="results-grid" class="results-grid">
+                        <!-- Participant results will be added here -->
+                    </div>
+                    
+                    <div class="row-gap"></div>
+                    
+                    <!-- Statistics -->
+                    <div id="stats-box" class="stats-box">
+                        <div class="row">
+                            <div class="stats-col">
+                                <h3>Average</h3>
+                                <div id="average" class="average-score">-</div>
+                            </div>
+                            <div class="stats-col">
+                                <h3>Median</h3>
+                                <div id="median" class="average-score">-</div>
+                            </div>
+                            <div class="stats-col">
+                                <h3>Mode</h3>
+                                <div id="mode" class="average-score">-</div>
+                            </div>
+                        </div>
+                        <div class="row-gap"></div>
+                        <div class="row">
+                            <div class="stats-col">
+                                <h3>Range</h3>
+                                <div id="range" class="average-score">-</div>
+                            </div>
+                            <div class="stats-col">
+                                <h3>Consensus</h3>
+                                <div id="consensus" class="average-score">-</div>
+                            </div>
+                            <div class="stats-col">
+                                <h3>Total Votes</h3>
+                                <div id="total-votes" class="average-score">0/0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-gap"></div>
+                
+                <!-- Update button -->
+                <div class="row">
+                    <button id="update-btn" class="button3" onclick="updateStatus()">Check for Updates</button>
+                </div>
+            </div>
+            
+            <div class="section-gap"></div>
+            
+            <!-- Footer -->
+            <div class="row">
+                <a href="/" class="button2">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Session ID from server
+        const sessionId = "{{ session_id }}";
+        let userId = null;
+        let userName = null;
+        let currentVote = null;
+        let lastRevealedState = false;
+        
+        // Determine which storage to use (localStorage or sessionStorage)
+        function getStorage() {
+            // Check if we're using session storage for multi-user testing
+            const useSessionStorage = localStorage.getItem('poker_use_session_storage') === 'true';
+            return useSessionStorage ? sessionStorage : localStorage;
+        }
+        
+        // Check if user is already registered in localStorage
+        window.onload = function() {
+            // Try to get stored user info
+            const storage = getStorage();
+            const storedUserId = storage.getItem(`poker_user_id_${sessionId}`);
+            const storedUserName = storage.getItem(`poker_user_name_${sessionId}`);
+            
+            if (storedUserId && storedUserName) {
+                // Auto-join with stored credentials
+                userId = storedUserId;
+                userName = storedUserName;
+                document.getElementById('name-input').value = userName;
+                rejoinSession();
+            }
+        };
+        
+        // Generate UUID for user identification
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        // Join session as new user
+        function joinSession() {
+            const nameInput = document.getElementById('name-input');
+            userName = nameInput.value.trim();
+            
+            if (!userName) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            // Generate user ID if not already set
+            if (!userId) {
+                userId = generateUUID();
+            }
+            
+            // Store in appropriate storage
+            const storage = getStorage();
+            storage.setItem(`poker_user_id_${sessionId}`, userId);
+            storage.setItem(`poker_user_name_${sessionId}`, userName);
+            
+            // Send join request to server
+            fetch(`/api/${sessionId}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    user_name: userName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show session interface
+                    document.getElementById('registration-section').style.display = 'none';
+                    document.getElementById('session-section').style.display = 'block';
+                    
+                    // Set up card click handlers
+                    setupCardHandlers();
+                    
+                    // Start polling for updates
+                    updateStatus();
+                    setInterval(updateStatus, 5000); // Poll every 5 seconds
+                } else {
+                    alert('Failed to join session. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error joining session:', error);
+                alert('An error occurred while joining the session.');
+            });
+        }
+        
+        // Rejoin with existing credentials
+        function rejoinSession() {
+            fetch(`/api/${sessionId}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    user_name: userName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show session interface
+                    document.getElementById('registration-section').style.display = 'none';
+                    document.getElementById('session-section').style.display = 'block';
+                    
+                    // Set up card click handlers
+                    setupCardHandlers();
+                    
+                    // Start polling for updates
+                    updateStatus();
+                    setInterval(updateStatus, 5000); // Poll every 5 seconds
+                } else {
+                    // Failed to rejoin, clear local storage and show registration
+                    const storage = getStorage();
+                    storage.removeItem(`poker_user_id_${sessionId}`);
+                    storage.removeItem(`poker_user_name_${sessionId}`);
+                    userId = null;
+                    alert('Your session expired. Please join again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error rejoining session:', error);
+            });
+        }
+        
+        // Set up card click handlers
+        function setupCardHandlers() {
+            const cards = document.querySelectorAll('.poker-card');
+            cards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove selected class from all cards
+                    cards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+                    
+                    // Get card value
+                    const value = this.getAttribute('data-value');
+                    
+                    // Submit vote
+                    submitVote(value);
+                });
+            });
+        }
+        
+        // Submit vote to server
+        function submitVote(value) {
+            currentVote = value;
+            
+            // Show vote status
+            const voteStatus = document.getElementById('vote-status');
+            const currentVoteValue = document.getElementById('current-vote-value');
+            voteStatus.style.display = 'block';
+            currentVoteValue.textContent = value;
+            
+            // Send vote to server
+            fetch(`/api/${sessionId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    vote: value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Failed to submit vote. Please try again.');
+                    // Reset selection
+                    document.querySelectorAll('.poker-card').forEach(c => c.classList.remove('selected'));
+                    voteStatus.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting vote:', error);
+                alert('An error occurred while submitting your vote.');
+            });
+        }
+        
+        // Update status and check for reveals
+        function updateStatus() {
+            fetch(`/api/${sessionId}/status`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateUI(data);
+                    }
+                })
+                .catch(error => console.error('Error fetching status:', error));
+        }
+        
+        // Update UI with current data
+        function updateUI(data) {
+            // Update round number
+            document.getElementById('round-number').textContent = data.statistics.round;
+            
+            // Update story if available
+            if (data.current_story) {
+                document.getElementById('current-story-text').textContent = data.current_story;
+            } else {
+                document.getElementById('current-story-text').textContent = 'Waiting for the facilitator to set a story...';
+            }
+            
+            // Update voting progress
+            const totalParticipants = data.statistics.total_participants;
+            const votesSubmitted = data.statistics.votes_submitted;
+            
+            if (totalParticipants > 0) {
+                document.getElementById('status-text').textContent = 
+                    `${votesSubmitted} of ${totalParticipants} participants have voted`;
+            } else {
+                document.getElementById('status-text').textContent = 'Waiting for participants...';
+            }
+            
+            // Check if revealed state changed
+            if (data.revealed !== lastRevealedState) {
+                lastRevealedState = data.revealed;
+                
+                if (data.revealed) {
+                    // Votes are revealed, show results
+                    document.getElementById('waiting-message').textContent = 'Votes have been revealed!';
+                    document.getElementById('results-container').style.display = 'block';
+                    updateResults(data);
+                } else {
+                    // Votes are reset, hide results
+                    document.getElementById('waiting-message').textContent = 'Waiting for facilitator to reveal votes...';
+                    document.getElementById('results-container').style.display = 'none';
+                    resetVoteDisplay();
+                }
+            } else if (data.revealed) {
+                // If already revealed, keep results updated
+                updateResults(data);
+            }
+            
+            // Check if user's vote is in the data
+            if (data.participants[userId] && data.participants[userId].vote) {
+                // User has already voted, highlight the correct card
+                const vote = data.participants[userId].vote;
+                if (vote !== currentVote) {
+                    // Update UI if server has a different vote
+                    currentVote = vote;
+                    
+                    // Update selected card
+                    document.querySelectorAll('.poker-card').forEach(card => {
+                        card.classList.remove('selected');
+                        if (card.getAttribute('data-value') === vote.toString()) {
+                            card.classList.add('selected');
+                        }
+                    });
+                    
+                    // Update vote status
+                    const voteStatus = document.getElementById('vote-status');
+                    const currentVoteValue = document.getElementById('current-vote-value');
+                    voteStatus.style.display = 'block';
+                    currentVoteValue.textContent = vote;
+                }
+            } else if (data.statistics.round !== parseInt(document.getElementById('round-number').textContent)) {
+                // New round, reset vote display
+                resetVoteDisplay();
+            }
+        }
+        
+        // Reset vote display
+        function resetVoteDisplay() {
+            document.querySelectorAll('.poker-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('vote-status').style.display = 'none';
+            currentVote = null;
+        }
+        
+        // Update results display
+        function updateResults(data) {
+            const resultsGrid = document.getElementById('results-grid');
+            resultsGrid.innerHTML = '';
+            
+            for (const [participantId, userData] of Object.entries(data.participants)) {
+                const participantContainer = document.createElement('div');
+                participantContainer.className = 'participant-container';
+                
+                const resultCard = document.createElement('div');
+                resultCard.className = 'result-card';
+                
+                // Check for consensus to apply styling
+                const mode = data.statistics.mode;
+                if (userData.vote === mode && userData.vote !== null) {
+                    resultCard.classList.add('consensus');
+                }
+                
+                // Highlight current user
+                if (participantId === userId) {
+                    participantContainer.classList.add('current-user');
+                }
+                
+                // Display vote
+                if (userData.vote !== null) {
+                    resultCard.textContent = userData.vote;
+                } else {
+                    resultCard.textContent = '?';
+                }
+                
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'participant-name';
+                nameSpan.textContent = userData.name;
+                
+                participantContainer.appendChild(resultCard);
+                participantContainer.appendChild(nameSpan);
+                resultsGrid.appendChild(participantContainer);
+            }
+            
+            // Update statistics
+            if (data.statistics.votes_submitted > 0) {
+                document.getElementById('average').textContent = 
+                    data.statistics.mean.toFixed(1);
+                document.getElementById('median').textContent = 
+                    data.statistics.median;
+                document.getElementById('mode').textContent = 
+                    data.statistics.mode;
+                document.getElementById('range').textContent = 
+                    `${data.statistics.min}-${data.statistics.max}`;
+                
+                const consensusPercentage = data.statistics.consensus_percentage || 0;
+                document.getElementById('consensus').textContent = 
+                    `${Math.round(consensusPercentage)}%`;
+                
+                document.getElementById('total-votes').textContent = 
+                    `${data.statistics.votes_submitted}/${data.statistics.total_participants}`;
+            }
+        }
+    </script>
+</body>
+</html>

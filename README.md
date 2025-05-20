@@ -1,2 +1,4 @@
-# ikhadi
-ikhadi: Planning Poker Python Flask App
+# ikhadi ~ Planning Poker
+*Python Flask App*
+
+

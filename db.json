@@ -3,15 +3,13 @@
     "code": "test",
     "description": "Room TEST",
     "learners": {
-      "432754e6-eaf1-4eeb-b6ba-3c8b8a55ecec": {
-        "name": "ian",
+      "449b650e-c903-470e-b5d7-003c24d64ead": {
+        "name": "iann",
         "isActive": true,
-        "lastCommunication": "2025-06-18T18:04:59.694910Z",
-        "status": "13",
-        "answer": "",
-        "handUpRank": 0
+        "lastCommunication": "2025-06-19T21:14:50.337351Z",
+        "status": "coffee"
       }
     },
-    "createdDate": "2025-06-18T18:04:25.165682Z"
+    "createdDate": "2025-06-19T21:11:06.044032Z"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "test": {
+    "code": "test",
+    "description": "Room TEST",
+    "learners": {
+      "432754e6-eaf1-4eeb-b6ba-3c8b8a55ecec": {
+        "name": "ian",
+        "isActive": true,
+        "lastCommunication": "2025-06-18T18:04:59.694910Z",
+        "status": "13",
+        "answer": "",
+        "handUpRank": 0
+      }
+    },
+    "createdDate": "2025-06-18T18:04:25.165682Z"
+  }
+}

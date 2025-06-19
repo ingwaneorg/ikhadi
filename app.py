@@ -1,171 +1,430 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-import random
-import string
-import time
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+import uuid
+import re
 import os
+import json
+from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
-# Check if in development mode
-is_development = os.environ.get('FLASK_ENV') == 'development' or os.environ.get('FLASK_DEBUG') == '1'
+# Limit the number of rooms and number of active learners per room
+MAX_ROOMS = 10
+MAX_LEARNERS_PER_ROOM = 20
+ALLOWED_ESTIMATES = {'0', '0.5', '1', '2', '3', '5', '8', '13', '20'}
 
-# In-memory "database"
-poker_sessions = {}
 
-# Helper function to generate session ID
-def generate_session_id():
-    return ''.join(random.choices(string.digits, k=3))
+# In-memory storage
+rooms = {}
+
+def validate_room_code(room_code):
+    """Validate room code: only letters, numbers, hyphens, 2-10 characters"""
+    return bool(re.match(r'^[A-Za-z0-9-]{2,10}$', room_code))
+
+def get_status_symbol(status):
+    """Convert status to HTML icon representation"""
+    if not status:
+        return '&nbsp;'
+    
+    status_map = {
+        'tick': '<i class="fas fa-check-circle tick"></i>',
+        'cross': '<i class="fas fa-times-circle cross"></i>',
+        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
+        'away': '<i class="fas fa-clock away"></i>',
+        'smile': '<i class="fas fa-smile smile"></i>',
+        'hand-up': '<i class="far fa-hand-paper"></i>',
+        'happy': '<i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i>'
+    }
+    
+    return status_map.get(status, f'<b>{status}</b>')
 
 @app.route('/')
-def index():
-    return render_template('index.html', dev_mode=is_development)
+def intro():
+    return render_template('intro.html')
 
-@app.route('/create', methods=['POST'])
-def create_session():
-    session_id = generate_session_id()
+@app.route('/join', methods=['POST'])
+def join_room():
+    room_code = request.form.get('room_code', '').lower().strip()
+    role = request.form.get('role')  # 'learner' or 'tutor'
     
-    # Create new session
-    poker_sessions[session_id] = {
-        "participants": {},
-        "current_story": "",
-        "revealed": False,
-        "last_activity": int(time.time()),
-        "rounds": 1
-    }
+    if not room_code or not validate_room_code(room_code):
+        return redirect(url_for('intro'))
     
-    return redirect(url_for('admin_view', session_id=session_id))
+    if role == 'tutor':
+        return redirect(url_for('tutor_page', room_code=room_code))
+    else:
+        return redirect(url_for('learner_page', room_code=room_code))
 
-@app.route('/<session_id>')
-def session_view(session_id):
-    if session_id not in poker_sessions:
-        return redirect(url_for('index'))
-    
-    return render_template('session.html', session_id=session_id)
+def get_learner_id():
+    if 'learner_id' not in session:
+        # Generate a unique code for each user
+        learner_uuid = str(uuid.uuid4())
+        session['learner_id'] = learner_uuid
 
-@app.route('/<session_id>/admin')
-def admin_view(session_id):
-    if session_id not in poker_sessions:
-        return redirect(url_for('index'))
-    
-    return render_template('admin.html', session_id=session_id)
+    return session['learner_id']
 
-# API endpoints
-@app.route('/api/<session_id>/join', methods=['POST'])
-def api_join(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
+@app.route('/<room_code>')
+def learner_page(room_code):
+    # Block any query parameters for security
+    if request.args:
+        return "Forbidden", 403
     
-    data = request.json
-    user_id = data.get('user_id')
-    user_name = data.get('user_name')
-    
-    if not user_id or not user_name:
-        return jsonify({"error": "User ID and name required"}), 400
-    
-    poker_sessions[session_id]["participants"][user_id] = {
-        "name": user_name,
-        "vote": None,
-        "timestamp": int(time.time())
-    }
-    
-    return jsonify({"success": True})
-
-@app.route('/api/<session_id>/vote', methods=['POST'])
-def api_vote(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
-    
-    data = request.json
-    user_id = data.get('user_id')
-    vote = data.get('vote')
-    
-    if not user_id:
-        return jsonify({"error": "User ID required"}), 400
-    
-    if user_id not in poker_sessions[session_id]["participants"]:
-        return jsonify({"error": "User not in session"}), 400
-    
-    poker_sessions[session_id]["participants"][user_id]["vote"] = vote
-    poker_sessions[session_id]["last_activity"] = int(time.time())
-    
-    return jsonify({"success": True})
-
-@app.route('/api/<session_id>/story', methods=['POST'])
-def api_set_story(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
-    
-    data = request.json
-    story = data.get('story')
-    
-    poker_sessions[session_id]["current_story"] = story
-    poker_sessions[session_id]["last_activity"] = int(time.time())
-    
-    return jsonify({"success": True})
-
-@app.route('/api/<session_id>/reveal', methods=['POST'])
-def api_reveal(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
-    
-    poker_sessions[session_id]["revealed"] = True
-    
-    return jsonify({"success": True})
-
-@app.route('/api/<session_id>/reset', methods=['POST'])
-def api_reset(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
-    
-    # Reset votes but keep participants
-    for user_id in poker_sessions[session_id]["participants"]:
-        poker_sessions[session_id]["participants"][user_id]["vote"] = None
-    
-    poker_sessions[session_id]["revealed"] = False
-    poker_sessions[session_id]["rounds"] += 1
-    
-    return jsonify({"success": True})
-
-@app.route('/api/<session_id>/status', methods=['GET'])
-def api_status(session_id):
-    if session_id not in poker_sessions:
-        return jsonify({"error": "Session not found"}), 404
-    
-    session_data = poker_sessions[session_id]
-    
-    # Calculate statistics
-    votes = [p["vote"] for p in session_data["participants"].values() 
-             if p["vote"] is not None and isinstance(p["vote"], (int, float))]
-    
-    stats = {
-        "total_participants": len(session_data["participants"]),
-        "votes_submitted": len(votes),
-        "mean": sum(votes) / len(votes) if votes else 0,
-        "median": sorted(votes)[len(votes)//2] if votes else 0,
-        "min": min(votes) if votes else 0,
-        "max": max(votes) if votes else 0,
-        "round": session_data["rounds"],
-        "revealed": session_data["revealed"]
-    }
-    
-    # Count vote frequencies for mode
-    if votes:
-        vote_counts = {}
-        for vote in votes:
-            vote_counts[vote] = vote_counts.get(vote, 0) + 1
-        stats["mode"] = max(vote_counts, key=vote_counts.get)
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
         
-        # Calculate consensus percentage
-        most_common_count = vote_counts[stats["mode"]]
-        stats["consensus_percentage"] = (most_common_count / len(votes)) * 100
+    room_code = room_code.lower()
     
-    return jsonify({
-        "success": True,
-        "current_story": session_data["current_story"],
-        "participants": session_data["participants"],
-        "revealed": session_data["revealed"],
-        "statistics": stats
-    })
+    # Show an 404 error if tutor hasn't created the room
+    if room_code not in rooms:
+        return "Room not found", 404
+
+    # Limit how many active learners can be in a room
+    room = rooms[room_code]      
+    active_learners = [l for l in room['learners'].values() if l.get('isActive')]
+    if len(active_learners) >= MAX_LEARNERS_PER_ROOM:
+        return "Room is full", 403  # or 429 Too Many Requests
+
+    learner_id = get_learner_id()
+    
+    # Find existing learner or create new one
+    if learner_id not in rooms[room_code]['learners']:
+        rooms[room_code]['learners'][learner_id] = {
+            'name': '',
+            'isActive': True,
+            'lastCommunication': datetime.now().isoformat() + 'Z',
+            # These fields get added when learner interacts
+            'status': '',
+            'answer': '',
+            'handUpRank': 0,
+        }
+    
+    learner = rooms[room_code]['learners'][learner_id]
+    
+    return render_template('learner.html', 
+                         room=rooms[room_code], 
+                         learner=learner,
+                         learner_id=learner_id)
+
+@app.route('/<room_code>/tutor')
+def tutor_page(room_code):
+    # Block any query parameters for security
+    if request.args:
+        return "Forbidden", 403
+    
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    room_code = room_code.lower()
+    
+    # Initialize room if it doesn't exist
+    if room_code not in rooms:
+        # Limit number of rooms
+        if len(rooms) >= MAX_ROOMS:
+            return "Maximum number of rooms reached", 403
+
+        rooms[room_code] = {
+            'code': room_code,
+            'description': f'Room {room_code.upper()}',
+            'learners': {},  # Dictionary, not array
+            'createdDate': datetime.now().isoformat() + 'Z'
+        }
+    
+    # Convert learners dict to list for template (with status symbols)
+    learners_list = []
+    for learner_id, learner_data in rooms[room_code]['learners'].items():
+        learner = learner_data.copy()
+        # Only list active users
+        if learner['isActive']:
+            learner['id'] = learner_id
+            learner['status_symbol'] = get_status_symbol(learner.get('status', ''))
+            learners_list.append(learner)
+    
+    # Create room object for template
+    room_for_template = rooms[room_code].copy()
+    room_for_template['learners'] = learners_list
+    
+    return render_template('tutor.html', 
+                         room=room_for_template,
+                         base_url=request.base_url.replace('/tutor', ''))
+
+# Save the database if in DEBUG mode
+def save_db_json():
+    if app.debug:
+        with open('db.json', 'w') as f:
+            json.dump(rooms, f, indent=2, default=str)
+
+@app.route('/<room_code>/update', methods=['POST'])
+def update_learner(room_code):
+    room_code = room_code.lower()
+    learner_id = get_learner_id()
+    
+    if not validate_room_code(room_code):
+        return jsonify({'success': False, 'error': 'Invalid room code'})
+    
+    if not learner_id or room_code not in rooms:
+        return jsonify({'success': False, 'error': 'Invalid session or room'})
+    
+    if learner_id not in rooms[room_code]['learners']:
+        rooms[room_code]['learners'][learner_id] = {
+            'name': '',  # starts empty
+            'isActive': True,
+            'handUpRank': 0,
+        }
+
+    data = request.get_json()
+    learner = rooms[room_code]['learners'][learner_id]
+    
+    # Update lastCommunication for any interaction
+    learner['isActive'] = True
+    learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
+    
+    # Update learner data
+    if 'name' in data:
+        learner['name'] = data['name'][:15]  # Max 15 characters
+    
+    if 'status' in data:
+        learner['status'] = data['status']
+        
+        # Handle hand-up ranking
+        if data['status'] == 'hand-up':
+            # Get max hand-up value to determine next rank
+            existing_ranks = [
+                l.get('handUpRank', 0) 
+                for l in rooms[room_code]['learners'].values()
+                if l.get('status') == 'hand-up' and l != learner
+            ]
+            next_rank = max(existing_ranks, default=0) + 1
+            learner['handUpRank'] = next_rank
+        else:
+            learner['handUpRank'] = 0
+    
+    if 'answer' in data:
+        learner['answer'] = data['answer'][:20]  # Max 20 characters
+    
+    save_db_json()
+    return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
+
+@app.route('/<room_code>/clear-status', methods=['POST'])
+def clear_all_status(room_code):
+    room_code = room_code.lower()
+    
+    if not validate_room_code(room_code):
+        return jsonify({'success': False, 'error': 'Invalid room code'})
+    
+    if room_code not in rooms:
+        return jsonify({'success': False, 'error': 'Room not found'})
+    
+    # Clear all learner statuses
+    for learner in rooms[room_code]['learners'].values():
+        learner['status'] = ''
+        learner['handUpRank'] = 0
+        learner['isActive'] = True
+        learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
+    
+    save_db_json()
+    return jsonify({'success': True})
+
+@app.route('/<room_code>/reset-learners', methods=['POST'])
+def reset_learners(room_code):
+    room_code = room_code.lower()
+    
+    if not validate_room_code(room_code):
+        return jsonify({'success': False, 'error': 'Invalid room code'})
+    
+    if room_code not in rooms:
+        return jsonify({'success': False, 'error': 'Room not found'})
+
+    # Make all learners in the room inactive
+    for learner in rooms[room_code]['learners'].values():
+        learner['isActive'] = False
+        learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
+        
+    save_db_json()
+    return jsonify({'success': True})
+
+# Poll is helful when sort by the status (helps with planning poker)
+def sort_key(x):
+    try:
+        return (0, float(x[0]))  # Numeric statuses first, sorted by float value
+    except ValueError:
+        return (1, x[0])  # case-sensitive sort for non-numeric keys
+
+@app.route('/<room_code>/poll')
+def poll_page(room_code):
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    room_code = room_code.lower()
+    
+    if room_code not in rooms:
+        return f"Room {room_code} not found", 404
+    
+    # Count responses by status
+    status_counts = {}
+    for learner in rooms[room_code]['learners'].values():
+        # Skip inactive learners
+        if not learner.get('isActive'):
+            continue
+        status = learner.get('status', '')
+        if status:
+            status_counts[status] = status_counts.get(status, 0) + 1
+    
+    # Find highest count for green highlighting
+    highest_count = max(status_counts.values()) if status_counts else 0
+    
+    # Get a list of active learners
+    learners_list = list(rooms[room_code]['learners'].values())
+    learners_list = [
+        learner for learner in rooms[room_code]['learners'].values()
+        if learner.get('isActive')
+    ]
+    
+    # Convert learners dict to list for template
+    room_for_template = rooms[room_code].copy()
+    room_for_template['learners'] = learners_list
+
+    # sort status numerically then alphabetically
+    sorted_status_counts = sorted(status_counts.items(), key=sort_key)
+    
+    return render_template('poll.html', 
+                         room=room_for_template, 
+                         status_counts=status_counts,
+                         sorted_status_counts=sorted_status_counts,
+                         highest_count=highest_count,
+                         get_status_symbol=get_status_symbol)
+
+@app.route('/<room_code>/poker')
+def poker_page(room_code):
+    show_values = request.args.get('show', 'false').lower() == 'true'    
+
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    room_code = room_code.lower()
+    if room_code not in rooms:
+        return f"Room {room_code} not found", 404
+    
+    # Get poker values (numeric responses)
+    poker_values = []
+    total_learners = len(rooms[room_code]['learners'])
+
+    # Count active learners
+    total_learners = sum(
+        1 for learner in rooms[room_code]['learners'].values()
+        if learner.get('isActive')
+    )
+    
+    for learner in rooms[room_code]['learners'].values():
+        # Skip inactive learners
+        if not learner.get('isActive'):
+            continue
+        
+        # Only use numeric statuses
+        status = learner.get('status', '')
+        if status in ALLOWED_ESTIMATES:
+            poker_values.append(float(status))
+   
+    # Calculate statistics
+    avg_text = 'no average'
+    stats = {}
+    consensus = 0
+    consensus_votes = 0
+    
+    if poker_values:
+        min_val = min(poker_values)
+        max_val = max(poker_values)
+
+        stats['min'] = int(min_val) if min_val % 1 == 0 else min_val
+        stats['max'] = int(max_val) if max_val % 1 == 0 else max_val
+        stats['count'] = len(poker_values)
+        stats['average'] = round(sum(poker_values)/len(poker_values),1)
+        stats['values'] = sorted(poker_values)
+        
+        # Show the average calculation
+        avg_text = f"Avg = {sum(poker_values)} / {len(poker_values)}"
+    
+        # Calculate consensus (most common value percentage)
+        if poker_values:
+            most_common_count = max(poker_values.count(x) for x in set(poker_values))
+            consensus = round((most_common_count / len(poker_values)) * 100)
+            consensus_votes = most_common_count
+            # if common count is 1 then NO consensus
+            if most_common_count == 1:
+                consensus = 0
+                consensus_votes = 0
+
+    # Get learner estimates
+    learner_estimates = []
+    for learner in rooms[room_code]['learners'].values():
+        if not learner.get('isActive'):
+            continue
+
+        name = learner.get('name', 'Unknown')
+        status = learner.get('status', '').strip()
+
+        if status in ALLOWED_ESTIMATES:
+            estimate = float(status)
+            if estimate.is_integer():
+                estimate = int(estimate)
+        else:
+            if status in ('away','coffee','?','hand-up'):
+                estimate = status
+            else:
+                estimate = ''
+
+        learner_estimates.append({
+            "name": name,
+            "estimate": estimate,
+        })
+
+    # Add mock data for testing
+    if app.debug:
+        for i in range(6):
+            learner_estimates.append({
+                "name": f"Mock{i+1}",
+                "estimate": "" if i % 2 == 0 else 5 
+            })
+
+    return render_template('poker.html', 
+            room=rooms[room_code], 
+            stats=stats,
+            total_learners=total_learners,
+            consensus=consensus,
+            consensus_votes=consensus_votes,
+            learner_estimates=learner_estimates,
+            show_values=show_values,
+            average_text=avg_text,
+            )
+
+@app.route("/api")
+def block_api_root():
+    return "Access to /api is not allowed", 403
+
+@app.route("/api/rooms")
+def api_rooms():
+    room_summaries = []
+
+    for room_code, room in rooms.items():
+        learners = room.get('learners', {}).values()
+        active_count = sum(1 for learner in learners if learner.get('isActive'))
+        room_summaries.append({
+            'code': room_code,
+            'description': room.get('description', ''),
+            'active_learners': active_count,
+            'created_date': room.get('createdDate'),
+        })
+
+    return jsonify(room_summaries)
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.context_processor
+def utility_processor():
+    return dict(get_status_symbol=get_status_symbol)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    port = int(os.environ.get('PORT', 8080))
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug)

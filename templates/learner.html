@@ -1,0 +1,219 @@
+<!-- templates/learner.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if learner.name %}
+        {{ learner.name }} - {{ room.code | upper}}
+    {% else %}
+        Learner - {{ room.code | upper}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="main learner">
+  <div class="panel">
+    <div class="section">
+      <div class="row">
+        <h1>{{ room.description or 'Room ' + room.code }}</h1>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <input type="text" 
+               id="learner-name"
+               pattern="[\-A-Za-z0-9.]+" 
+               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 15)"
+               value="{{ learner.name }}"
+               placeholder="First name only" 
+               maxlength="15" 
+               autocomplete="off"
+               onchange="updateName()">
+      </div>
+    </div>
+    <div class="section-gap"></div>
+    <div class="section" id="name-instructions" style="visibility: {{ 'hidden' if learner.name else 'visible' }}">
+      <div class="row">Only letters, numbers, spaces, dots, and hyphens</div>
+      <div class="row">Maximum 15 characters</div>
+    </div>
+    <div class="section" id="status-display" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row">
+        <div class="status">
+          <span id="current-status">{{ get_status_symbol(learner.status)|safe if learner.status else '&nbsp;'|safe }}</span>
+        </div>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <div id="status-message" class="time-message">&nbsp;</div>
+        <div id="error-message" class="failed" style="display: none;">
+          Status update failed - try again
+        </div>
+      </div>
+    </div>
+    <div class="section-gap"></div>
+
+    <div class="section" id="answer-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row">
+      <input type="text" 
+             id="learner-answer"
+             title="Enter your answer (maximum of 20 characters)"
+             maxlength="20"
+             autocomplete="off" 
+             value="{{ learner.answer }}"
+             placeholder="Answer" 
+             onchange="updateAnswer()">
+      </div>
+    </div>
+
+    <div class="section-gap"></div>
+    <div class="section" id="buttons-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row">
+        <button onclick="sendStatus('tick')">
+          <i class="fas fa-check-circle tick"></i><span> Tick</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('cross')">
+          <i class="fas fa-times-circle cross"></i><span> Cross</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('happy')">
+          <i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i><span> Happy</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('hand-up')">
+          <i class="far fa-hand-paper"></i><span> Hand</span>
+        </button>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <button onclick="sendStatus('A')">A</button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('B')">B</button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('C')">C</button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('D')">D</button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('E')">E</button>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <button onclick="sendStatus('smile')">
+          <i class="fas fa-smile smile"></i><span> Smile</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('coffee')">
+          <i class="fas fa-mug-hot coffee"></i><span> Break</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('away')">
+          <i class="fas fa-clock away"></i><span> Away</span>
+        </button>
+      </div>
+    </div>
+    <div class="section-gap"></div>
+    <div class="section" id="clear-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row">
+        <button onclick="sendStatus('')">Clear</button>
+      </div>
+    </div>
+
+    <div class="section" id="poker-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row-gap"></div>
+      <div class="row">
+        <button class="poker" onclick="sendStatus('0')">0</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('0.5')">&frac12;</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('1')">1</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('2')">2</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('3')">3</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('5')">5</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('8')">8</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('13')">13</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('20')">20</button>
+        <span class="col-gap-small"></span>
+        <button class="poker" onclick="sendStatus('?')">?</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const roomCode = '{{ room.code }}';
+
+function getStatusSymbol(status) {
+    const statusMap = {
+        'tick': '<i class="fas fa-check-circle tick"></i>',
+        'cross': '<i class="fas fa-times-circle cross"></i>', 
+        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
+        'away': '<i class="fas fa-clock away"></i>',
+        'smile': '<i class="fas fa-smile smile"></i>',
+        'hand-up': '<i class="far fa-hand-paper"></i>',
+        'happy': '<i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i>'
+    };
+    return statusMap[status] || (status ? `<b>${status}</b>` : '&nbsp;');
+}
+
+function updateName() {
+    const nameInput = document.getElementById('learner-name');
+    const name = nameInput.value.trim();
+    
+    updateLearner(roomCode, { name: name }).then(response => {
+        if (response.success) {
+            toggleSections(!!name);
+        }
+    });
+}
+
+function updateAnswer() {
+    const answerInput = document.getElementById('learner-answer');
+    const answer = answerInput.value.trim();
+    
+    updateLearner(roomCode, { answer: answer });
+}
+
+function sendStatus(status) {
+    // Clear error message at start of every request
+    document.getElementById('error-message').style.display = 'none';
+
+    updateLearner(roomCode, { status: status }).then(response => {
+        if (response.success) {
+            document.getElementById('current-status').innerHTML = getStatusSymbol(status);
+            document.getElementById('status-message').textContent = 
+                status ? `Updated at ${new Date().toLocaleTimeString()}` : '';
+            document.getElementById('error-message').style.display = 'none';
+        } else {
+            document.getElementById('error-message').style.display = 'block';
+        }
+    }).catch(() => {
+        document.getElementById('error-message').style.display = 'block';
+    });
+}
+
+function toggleSections(hasName) {
+    const visibility = hasName ? 'visible' : 'hidden';
+    const nameInstructionsVisibility = hasName ? 'hidden' : 'visible';
+    
+    document.getElementById('name-instructions').style.visibility = nameInstructionsVisibility;
+    document.getElementById('status-display').style.visibility = visibility;
+    document.getElementById('answer-section').style.visibility = visibility;
+    document.getElementById('buttons-section').style.visibility = visibility;
+    document.getElementById('clear-section').style.visibility = visibility;
+    document.getElementById('poker-section').style.visibility = visibility;
+}
+
+// Initialize visibility based on current name
+document.addEventListener('DOMContentLoaded', function() {
+    const hasName = document.getElementById('learner-name').value.trim().length > 0;
+    toggleSections(hasName);
+});
+</script>
+{% endblock %}

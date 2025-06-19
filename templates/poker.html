@@ -1,0 +1,153 @@
+<!-- templates/poker.html -->
+{% extends "base.html" %}
+
+{% block title %}Planning Poker - {{ room.code | upper}}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <h1>{{ room.code | upper }} ~ Planning Poker</h1>
+  <div class="col-gap"></div>
+  <div class="col-gap"></div>
+  <a href="?show=true">
+    <button class="button1">Show</button>
+  </a>
+  <div class="col-gap"></div>
+  <a href="?show=false">
+    <button class="button2">Hide</button>
+  </a>
+</div>
+<div class="row-gap" style="height: 30px;"></div>
+
+<!-- ESTIMATES -->
+<div class="main tutor">
+  <div class="cards-container">
+    {% for learner in learner_estimates %}
+      <div class="card {% if learner.estimate not in ('','?','away','coffee','hand-up') %}has-estimate{% else %}no-estimate{% endif %}">
+        <div class="row3">
+          <h3>{{ learner.name | default('-', true) }}</h3>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {% if show_values %}
+              {% if learner.estimate not in ('','?','away','coffee','hand-up') %}
+                {{ learner.estimate }}
+              {% endif %}
+            {% else %}
+              <div class="card-back 
+                  {% if learner.estimate == '' %} no-estimate {% endif %}
+                  {% if learner.estimate in ('?','hand-up') %} card-unknown {% endif %}
+                  {% if learner.estimate in ('away','coffee') %} card-break {% endif %}
+              ">
+                {% if learner.estimate in ('away','coffee') %}
+                  ☕
+                {% elif learner.estimate == '?' %}
+                  ?
+                {% elif learner.estimate == 'hand-up' %}
+                  <i class="fas fa-hand-paper"></i>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% if not loop.last %}
+        <div class="col-gap"></div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<!-- STATISTICS -->
+{% if show_values %}
+<div class="row-gap" style="height: 20px;"></div>
+<div class="main learner">
+  <div class="panel poker">
+
+    <div class="row"> <!-- This makes the boxes sit side by side -->
+
+      <!-- Count box -->
+      <div class="section stat-box">
+        <div class="row3">
+          <h2>Votes</h2>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {{ stats.count or 0 }}
+          </div>
+        </div>
+        <div class="row3">out of {{ total_learners }}</div>
+      </div>
+
+      <div class="col-gap"></div> <!-- Gap between boxes -->
+
+      <!-- Minimum box -->
+      <div class="section stat-box">
+        <div class="row3">
+          <h2>Min</h2>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {{ stats.get('min', '--') }}
+          </div>
+        </div>
+        <div class="row3">lowest estimate</div>
+      </div>
+
+      <div class="col-gap"></div> <!-- Gap between boxes -->
+
+      <!-- Maximum box -->
+      <div class="section stat-box">
+        <div class="row3">
+          <h2>Max</h2>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {{ stats.get('max', '--') }}
+          </div>
+        </div>
+        <div class="row3">highest estimate</div>
+      </div>
+
+      <div class="col-gap"></div> <!-- Gap between boxes -->
+
+      <!-- Average box -->
+      <div class="section stat-box">
+        <div class="row3">
+          <h2>Average</h2>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {{ stats.get('average', '--') }}
+          </div>
+        </div>
+        <div class="row3">{{ average_text }}</div>
+      </div>
+
+      <div class="col-gap"></div> <!-- Gap between boxes -->
+
+      <!-- Consensus box -->
+      <div class="section stat-box {{ 'full-agreement' if consensus == 100 else '' }}">
+        <div class="row3">
+          <h2>Consensus</h2>
+        </div>
+        <div class="status poker">
+          <div class="row2">
+            {{ consensus }}%
+          </div>
+        </div>
+        <div class="row3">
+          {% if consensus == 100 %}
+            🎉 Full agreement!
+          {% else %}
+            {{ consensus_votes }} out of {{ stats.count or 0 }} agree
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

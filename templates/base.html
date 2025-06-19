@@ -1,0 +1,46 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ticks and Crosses{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% block content %}{% endblock %}
+    
+    <script>
+        // Utility functions
+        function updateLearner(roomCode, data) {
+            return fetch(`/${roomCode}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json());
+        }
+        
+        function clearAllStatus(roomCode) {
+            return fetch(`/${roomCode}/clear-status`, {
+                method: 'POST'
+            }).then(response => response.json());
+        }
+        
+        function resetLearners(roomCode) {
+            return fetch(`/${roomCode}/reset-learners`, {
+                method: 'POST'
+            }).then(response => response.json());
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            // no alert
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,389 @@
+body {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+h1 {
+  margin: 0;
+}
+
+.tutor .learner {
+  cursor: pointer;
+  user-select: none;
+}
+
+.big-page {
+  transform: scale(1.8) translateY(22%);
+  transform-origin: center; /* Ensures scaling starts from the top left */
+}
+
+.selected {
+  background-color: yellow;
+}
+
+button {
+  cursor: pointer;
+  padding: 5px;
+  font-size: large;
+  white-space: nowrap;
+  border: 2px solid black;
+  background-color: white;
+  border-radius: 15px;
+  user-select: none;
+  line-height: 1.75;
+}
+
+button.poker {
+  border: 2px solid darkgray;
+  border-radius: 999px; /* fully rounded pill shape */
+  line-height: 1.0;
+}
+
+button.poker:hover {
+  background-color: lightgreen;
+}
+
+button.clipboard {
+  width: fit-content;
+  line-height: initial;
+}
+
+button:focus, input:focus {
+  outline: 0;
+}
+
+button.button1 {
+  background-color: lightgreen;
+}
+
+button.button2 {
+  background-color:lightpink;
+}
+
+button.button3 {
+  background-color: darkseagreen;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.panel {
+  padding: 20px;
+  border: 2px solid black;
+  background-color: #e8e8e8;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 15em;
+  min-width: 450px;
+}
+
+.panel.poker {
+  min-height: 8em;
+}
+
+.tutor .panel, .settings .panel {
+  background-color: white;  
+  min-width: 100px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section.stat-box {
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  padding: 1em;
+  background: white;
+  min-width: 100px;
+}
+
+.full-agreement {
+  background-color: #28a745 !important; /* solid green */
+  color: white !important;              /* white text */
+  border-radius: 0.5em;
+  padding: 1em;
+  transition: background-color 0.3s ease;
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+}
+
+.left {
+  justify-content: flex-start;
+}
+
+.col-gap {
+  width: 10px;
+  display: inline-block;
+  flex: none;
+}
+
+.col-gap-small {
+  width: 5px;
+  display: inline-block;
+  flex: none;
+}
+
+.section-gap {
+  height: 25px;
+  display: block;
+  flex: none;
+}
+
+.row-gap {
+  height: 10px;
+  display: block;
+  flex: none;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.row1 {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  text-align: left;
+}
+
+.row2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.row3 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+div.status {
+  font-size: 6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 6rem;
+}
+
+.status.poker {
+  font-size: 4rem;
+}
+
+td.status {
+  text-align: right;
+}
+
+.row button {
+  -ms-flex: 1 1 0%1;
+  flex: 1 1 0%;
+}
+
+input[type=text] {
+  width: 100%;
+  padding: 5px;
+  font-size: large;
+  text-align: center;
+  border: 2px solid black;
+  border-radius: 15px;
+  /* line-height: 1.75; */
+}
+
+.intro input[type=text] {
+  font-size: x-large;
+}
+
+.tick {
+  color: green;
+}
+
+i {
+  text-shadow: 2px 2px 3px lightgrey;
+}
+
+.cross {
+  color: darkred;
+}
+
+.smile {
+  color: hotpink;
+}
+
+.happy {
+  color: darkorange;
+}
+
+.coffee {
+  color: grey;
+}
+
+.away {
+  color: blue;
+}
+
+.failed {
+  color: darkred;
+}
+
+.time-message {
+  color: gray;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead, tfoot {
+  font-style: italic;
+  font-weight: bold;
+}
+
+td {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-top: 1px solid lightslategray;
+  border-bottom: 1px solid lightslategray;
+}
+
+.inactive {
+  opacity: 50%;
+}
+
+/* draw bars in poll */
+/* Base class for blocks */
+.block {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  background-color: blue;
+}
+/* green block */
+.green-block {
+  background-color: green;
+}
+
+/* cards for planning poker */
+.card {
+  border: 2px solid #444;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+  max-width: 120px;      /* optional: avoid super wide cards */
+  flex: 1 1 100px;       /* allow cards to shrink/grow, base width 100px */
+  min-width: 100px;
+  text-align: center;
+  padding: 1em;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2);
+  background-color: lightgreen !important;
+  cursor: pointer;
+}
+
+.card .row2 {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.card.has-estimate {
+  background-color: #e0f7fa;  /* light blue, or any color you want */
+  border-color: #00796b;      /* a matching darker border */
+  box-shadow: 3px 3px 8px rgba(0, 121, 107, 0.4);
+}
+
+.card.no-estimate {
+  background-color: #f0f0f0;  /* light grey for no estimate */
+  border-color: #aaa;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.card-back {
+  background: linear-gradient(45deg, #004080 25%, #003060 25%, #003060 50%, #004080 50%, #004080 75%, #003060 75%, #003060 100%);
+  background-size: 40px 40px;
+  border-radius: 12px;
+  color: white;
+  font-size: 4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 6rem;
+  width: 6rem;
+  user-select: none;
+  box-shadow: inset 0 0 8px #001a33;
+  border: 2px solid #001a33;
+}
+
+/* Card backgrounds */
+/* No Estimate ~ Grey */
+.card-back.no-estimate {
+  background: linear-gradient(45deg,
+    #bbbbbb 25%, #999999 25%,
+    #999999 50%, #bbbbbb 50%,
+    #bbbbbb 75%, #999999 75%,
+    #999999 100%);
+  background-size: 40px 40px;
+  box-shadow: inset 0 0 8px #333;
+  border: 2px solid #444;
+}
+
+.card-back.card-break {
+  background: linear-gradient(45deg,
+    #888888 25%, #666666 25%,
+    #666666 50%, #888888 50%,
+    #888888 75%, #666666 75%,
+    #666666 100%);
+  background-size: 40px 40px;
+  box-shadow: inset 0 0 8px #444;
+  border: 2px solid #555;
+}
+
+.card-back.card-unknown {
+  background: linear-gradient(45deg,
+    #996600 25%, #664400 25%,
+    #664400 50%, #996600 50%,
+    #996600 75%, #664400 75%,
+    #664400 100%);
+  background-size: 40px 40px;
+  box-shadow: inset 0 0 8px #331a00;
+  border: 2px solid #442200;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  max-width: 100%;  /* or remove max-width */
+  margin: 0 auto;
+  padding: 10px;  /* optional for breathing room */
+}
+
+/* Mobile devices */
+@media only screen and (max-width: 420px) {
+  .main {
+    width: 100%;
+  }
+
+  .panel {
+    min-width: 100px;
+    width: 100%;
+  }
+}
+

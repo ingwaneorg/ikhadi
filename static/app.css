@@ -11,15 +11,6 @@ h1 {
   user-select: none;
 }
 
-.big-page {
-  transform: scale(1.8) translateY(22%);
-  transform-origin: center; /* Ensures scaling starts from the top left */
-}
-
-.selected {
-  background-color: yellow;
-}
-
 button {
   cursor: pointer;
   padding: 5px;
@@ -40,11 +31,6 @@ button.poker {
 
 button.poker:hover {
   background-color: lightgreen;
-}
-
-button.clipboard {
-  width: fit-content;
-  line-height: initial;
 }
 
 button:focus, input:focus {
@@ -202,41 +188,13 @@ input[type=text] {
   font-size: x-large;
 }
 
-.tick {
-  color: green;
-}
-
 i {
   text-shadow: 2px 2px 3px lightgrey;
 }
 
-.cross {
-  color: darkred;
-}
-
-.smile {
-  color: hotpink;
-}
-
-.happy {
-  color: darkorange;
-}
-
-.coffee {
-  color: grey;
-}
-
-.away {
-  color: blue;
-}
-
-.failed {
-  color: darkred;
-}
-
-.time-message {
-  color: gray;
-}
+.hand-up { color: black; }
+.not-sure { color: blue; }
+.break { color: brown; }
 
 table {
   width: 100%;
@@ -259,20 +217,6 @@ td {
 
 .inactive {
   opacity: 50%;
-}
-
-/* draw bars in poll */
-/* Base class for blocks */
-.block {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  background-color: blue;
-}
-/* green block */
-.green-block {
-  background-color: green;
 }
 
 /* cards for planning poker */

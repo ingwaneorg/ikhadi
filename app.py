@@ -27,13 +27,9 @@ def get_status_symbol(status):
         return '&nbsp;'
     
     status_map = {
-        'tick': '<i class="fas fa-check-circle tick"></i>',
-        'cross': '<i class="fas fa-times-circle cross"></i>',
-        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
-        'away': '<i class="fas fa-clock away"></i>',
-        'smile': '<i class="fas fa-smile smile"></i>',
         'hand-up': '<i class="far fa-hand-paper"></i>',
-        'happy': '<i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i>'
+        'not-sure': '<i class="fas fa-mug-hot coffee"></i>',
+        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
     }
     
     return status_map.get(status, f'<b>{status}</b>')
@@ -265,7 +261,7 @@ def poker_page(room_code):
             if estimate.is_integer():
                 estimate = int(estimate)
         else:
-            if status in ('away','coffee','?','hand-up'):
+            if status in ('hand-up','not-sure','break'):
                 estimate = status
             else:
                 estimate = ''

@@ -22,25 +22,25 @@
 <div class="main tutor">
   <div class="cards-container">
     {% for learner in learner_estimates %}
-      <div class="card {% if learner.estimate not in ('','?','away','coffee','hand-up') %}has-estimate{% else %}no-estimate{% endif %}">
+      <div class="card {% if learner.estimate not in ('','hand-up','not-sure','break') %}has-estimate{% else %}no-estimate{% endif %}">
         <div class="row3">
           <h3>{{ learner.name | default('-', true) }}</h3>
         </div>
         <div class="status poker">
           <div class="row2">
             {% if show_values %}
-              {% if learner.estimate not in ('','?','away','coffee','hand-up') %}
+              {% if learner.estimate not in ('','hand-up','not-sure','break') %}
                 {{ learner.estimate }}
               {% endif %}
             {% else %}
               <div class="card-back 
-                  {% if learner.estimate == '' %} no-estimate {% endif %}
-                  {% if learner.estimate in ('?','hand-up') %} card-unknown {% endif %}
-                  {% if learner.estimate in ('away','coffee') %} card-break {% endif %}
+                  {% if learner.estimate == 'not-sure' %} no-estimate {% endif %}
+                  {% if learner.estimate in ('','hand-up') %} card-unknown {% endif %}
+                  {% if learner.estimate == 'break' %} card-break {% endif %}
               ">
-                {% if learner.estimate in ('away','coffee') %}
+                {% if learner.estimate == 'break' %}
                   ☕
-                {% elif learner.estimate == '?' %}
+                {% elif learner.estimate == 'not-sure' %}
                   ?
                 {% elif learner.estimate == 'hand-up' %}
                   <i class="fas fa-hand-paper"></i>

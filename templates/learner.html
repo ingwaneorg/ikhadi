@@ -48,74 +48,25 @@
         </div>
       </div>
     </div>
-    <div class="section-gap"></div>
-
-    <div class="section" id="answer-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
-      <div class="row">
-      <input type="text" 
-             id="learner-answer"
-             title="Enter your answer (maximum of 20 characters)"
-             maxlength="20"
-             autocomplete="off" 
-             value="{{ learner.answer }}"
-             placeholder="Answer" 
-             onchange="updateAnswer()">
-      </div>
-    </div>
 
     <div class="section-gap"></div>
     <div class="section" id="buttons-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
       <div class="row">
-        <button onclick="sendStatus('tick')">
-          <i class="fas fa-check-circle tick"></i><span> Tick</span>
-        </button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('cross')">
-          <i class="fas fa-times-circle cross"></i><span> Cross</span>
-        </button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('happy')">
-          <i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i><span> Happy</span>
-        </button>
-        <span class="col-gap"></span>
         <button onclick="sendStatus('hand-up')">
-          <i class="far fa-hand-paper"></i><span> Hand</span>
-        </button>
-      </div>
-      <div class="row-gap"></div>
-      <div class="row">
-        <button onclick="sendStatus('A')">A</button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('B')">B</button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('C')">C</button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('D')">D</button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('E')">E</button>
-      </div>
-      <div class="row-gap"></div>
-      <div class="row">
-        <button onclick="sendStatus('smile')">
-          <i class="fas fa-smile smile"></i><span> Smile</span>
+          <i class="far fa-hand-paper hand-up"></i><span> Hand-up</span>
         </button>
         <span class="col-gap"></span>
-        <button onclick="sendStatus('coffee')">
-          <i class="fas fa-mug-hot coffee"></i><span> Break</span>
+        <button onclick="sendStatus('not-sure')">
+          <i class="fas fa-question-circle not-sure"></i><span> Not sure</span>
         </button>
         <span class="col-gap"></span>
-        <button onclick="sendStatus('away')">
-          <i class="fas fa-clock away"></i><span> Away</span>
+        <button onclick="sendStatus('break')">
+          <i class="fas fa-mug-hot break"></i><span> Break</span>
         </button>
-      </div>
-    </div>
-    <div class="section-gap"></div>
-    <div class="section" id="clear-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
-      <div class="row">
-        <button onclick="sendStatus('')">Clear</button>
       </div>
     </div>
 
+    <div class="section-gap"></div>
     <div class="section" id="poker-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
       <div class="row-gap"></div>
       <div class="row">
@@ -136,8 +87,6 @@
         <button class="poker" onclick="sendStatus('13')">13</button>
         <span class="col-gap-small"></span>
         <button class="poker" onclick="sendStatus('20')">20</button>
-        <span class="col-gap-small"></span>
-        <button class="poker" onclick="sendStatus('?')">?</button>
       </div>
     </div>
 
@@ -151,13 +100,9 @@ const roomCode = '{{ room.code }}';
 
 function getStatusSymbol(status) {
     const statusMap = {
-        'tick': '<i class="fas fa-check-circle tick"></i>',
-        'cross': '<i class="fas fa-times-circle cross"></i>', 
-        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
-        'away': '<i class="fas fa-clock away"></i>',
-        'smile': '<i class="fas fa-smile smile"></i>',
-        'hand-up': '<i class="far fa-hand-paper"></i>',
-        'happy': '<i class="fas fa-grin-stars happy"></i><i class="fas fa-grin-stars happy"></i>'
+        'hand-up' : '<i class="far fa-hand-paper      hand-up"></i>',
+        'not-sure': '<i class="fas fa-question-circle not-sure"></i>',
+        'break'   : '<i class="fas fa-mug-hot         break"></i>',
     };
     return statusMap[status] || (status ? `<b>${status}</b>` : '&nbsp;');
 }
@@ -206,7 +151,6 @@ function toggleSections(hasName) {
     document.getElementById('status-display').style.visibility = visibility;
     document.getElementById('answer-section').style.visibility = visibility;
     document.getElementById('buttons-section').style.visibility = visibility;
-    document.getElementById('clear-section').style.visibility = visibility;
     document.getElementById('poker-section').style.visibility = visibility;
 }
 

@@ -26,7 +26,10 @@ button {
 button.poker {
   border: 2px solid darkgray;
   border-radius: 999px; /* fully rounded pill shape */
-  line-height: 1.0;
+  line-height: 1.5;
+  /* subtle shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;  
 }
 
 button.poker:hover {

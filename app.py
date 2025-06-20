@@ -13,7 +13,6 @@ MAX_ROOMS = 10
 MAX_LEARNERS_PER_ROOM = 20
 ALLOWED_ESTIMATES = {'0', '0.5', '1', '2', '3', '5', '8', '13', '20'}
 
-
 # In-memory storage
 rooms = {}
 
@@ -27,9 +26,9 @@ def get_status_symbol(status):
         return '&nbsp;'
     
     status_map = {
-        'hand-up': '<i class="far fa-hand-paper"></i>',
-        'not-sure': '<i class="fas fa-mug-hot coffee"></i>',
-        'coffee': '<i class="fas fa-mug-hot coffee"></i>',
+        'hand-up' : '<i class="far fa-hand-paper hand-up"></i>',
+        'not-sure': '<i class="fas fa-question-circle not-sure"></i>',
+        'break'   : '<i class="fas fa-mug-hot break"></i>',
     }
     
     return status_map.get(status, f'<b>{status}</b>')
@@ -235,7 +234,7 @@ def poker_page(room_code):
         stats['values'] = sorted(poker_values)
         
         # Show the average calculation
-        avg_text = f"Avg = {sum(poker_values)} / {len(poker_values)}"
+        avg_text = f"avg = {sum(poker_values)} / {len(poker_values)}"
     
         # Calculate consensus (most common value percentage)
         if poker_values:

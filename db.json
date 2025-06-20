@@ -1,20 +1,21 @@
 {
-  "alpha": {
-    "code": "alpha",
-    "description": "Room ALPHA",
+  "test": {
+    "code": "test",
+    "description": "Room TEST",
     "learners": {
-      "b319520b-f06a-4043-95ed-5b3bd90db783": {
-        "name": "mary",
-        "isActive": true,
-        "lastCommunication": "2025-06-20T09:46:53.865304Z"
-      },
-      "449b650e-c903-470e-b5d7-003c24d64ead": {
+      "0dad365f-3d7e-42c4-b6fe-0e2a48991b7d": {
         "name": "iann",
         "isActive": true,
-        "lastCommunication": "2025-06-20T09:50:08.394347Z",
-        "status": "13"
+        "lastCommunication": "2025-06-20T23:13:21.759367Z",
+        "status": "3"
+      },
+      "115e9302-e082-4a24-8e79-eba9bb4976c9": {
+        "name": "maryy",
+        "isActive": true,
+        "lastCommunication": "2025-06-20T23:14:06.839354Z",
+        "status": "20"
       }
     },
-    "createdDate": "2025-06-20T09:46:48.186517Z"
+    "createdDate": "2025-06-20T23:12:51.634429Z"
   }
 }

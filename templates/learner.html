@@ -12,10 +12,13 @@
 {% block content %}
 <div class="main learner">
   <div class="panel">
+
     <div class="section">
+      <!-- Room code / description -->
       <div class="row">
         <h1>{{ room.description or 'Room ' + room.code }}</h1>
       </div>
+      <!-- Enter name box -->
       <div class="row-gap"></div>
       <div class="row">
         <input type="text" 
@@ -29,46 +32,17 @@
                onchange="updateName()">
       </div>
     </div>
-    <div class="section-gap"></div>
-    <div class="section" id="name-instructions" style="visibility: {{ 'hidden' if learner.name else 'visible' }}">
-      <div class="row">Only letters, numbers, spaces, dots, and hyphens</div>
-      <div class="row">Maximum 15 characters</div>
-    </div>
-    <div class="section" id="status-display" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
-      <div class="row">
-        <div class="status">
-          <span id="current-status">{{ get_status_symbol(learner.status)|safe if learner.status else '&nbsp;'|safe }}</span>
-        </div>
-      </div>
+
+    <!-- Learner name input box -->
+    <div class="section" id="name-instructions" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
       <div class="row-gap"></div>
-      <div class="row">
-        <div id="status-message" class="time-message">&nbsp;</div>
-        <div id="error-message" class="failed" style="display: none;">
-          Status update failed - try again
-        </div>
-      </div>
+      <div class="row">Only letters, numbers, spaces, dots, & hyphens</div>
     </div>
 
-    <div class="section-gap"></div>
-    <div class="section" id="buttons-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
-      <div class="row">
-        <button onclick="sendStatus('hand-up')">
-          <i class="far fa-hand-paper hand-up"></i><span> Hand-up</span>
-        </button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('not-sure')">
-          <i class="fas fa-question-circle not-sure"></i><span> Not sure</span>
-        </button>
-        <span class="col-gap"></span>
-        <button onclick="sendStatus('break')">
-          <i class="fas fa-mug-hot break"></i><span> Break</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="section-gap"></div>
+    <!-- Estimate buttons: Fibonacci numbers -->
     <div class="section" id="poker-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
-      <div class="row-gap"></div>
+      <div class="row">Select your estimate for the current story:</div>
+      <div class="section-gap"></div>
       <div class="row">
         <button class="poker" onclick="sendStatus('0')">0</button>
         <span class="col-gap-small"></span>
@@ -90,6 +64,41 @@
       </div>
     </div>
 
+    <!-- Large status icon or estimate number -->
+    <div class="section" id="status-display" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row-gap"></div>
+      <div class="row">
+        <div class="status">
+          <span id="current-status">{{ get_status_symbol(learner.status)|safe if learner.status else '&nbsp;'|safe }}</span>
+        </div>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <div id="status-message" class="time-message">&nbsp;</div>
+        <div id="error-message" class="failed" style="display: none;">
+          ~ Status update failed - try again
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Buttons: Hand-up ~ Not Sure ~ Break -->
+    <div class="section-gap"></div>
+    <div class="section" id="buttons-section" style="visibility: {{ 'visible' if learner.name else 'hidden' }}">
+      <div class="row">
+        <button onclick="sendStatus('hand-up')">
+          <i class="far fa-hand-paper hand-up"></i><span> Hand-up</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('not-sure')">
+          <i class="fas fa-question-circle not-sure"></i><span> Not sure</span>
+        </button>
+        <span class="col-gap"></span>
+        <button onclick="sendStatus('break')">
+          <i class="fas fa-mug-hot break"></i><span> Break</span>
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
@@ -100,9 +109,9 @@ const roomCode = '{{ room.code }}';
 
 function getStatusSymbol(status) {
     const statusMap = {
-        'hand-up' : '<i class="far fa-hand-paper      hand-up"></i>',
+        'hand-up' : '<i class="far fa-hand-paper hand-up"></i>',
         'not-sure': '<i class="fas fa-question-circle not-sure"></i>',
-        'break'   : '<i class="fas fa-mug-hot         break"></i>',
+        'break'   : '<i class="fas fa-mug-hot break"></i>',
     };
     return statusMap[status] || (status ? `<b>${status}</b>` : '&nbsp;');
 }

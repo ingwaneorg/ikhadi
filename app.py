@@ -278,7 +278,7 @@ def poker_page(room_code):
             learner_estimates.append({"name": "Mnotsure","estimate": "not-sure"})
             learner_estimates.append({"name": "Mbreak"  ,"estimate": "break"})
             #learner_estimates.append({"name": "Mother" ,"estimate": "other"})
-            for i in range(2):
+            for i in range(1):
                 estimate = list(ALLOWED_ESTIMATES)[i]
                 learner_estimates.append({"name": f"Mock{i+1}","estimate": estimate})
 

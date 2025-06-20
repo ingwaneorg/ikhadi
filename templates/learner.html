@@ -118,13 +118,6 @@ function updateName() {
     });
 }
 
-function updateAnswer() {
-    const answerInput = document.getElementById('learner-answer');
-    const answer = answerInput.value.trim();
-    
-    updateLearner(roomCode, { answer: answer });
-}
-
 function sendStatus(status) {
     // Clear error message at start of every request
     document.getElementById('error-message').style.display = 'none';
@@ -149,7 +142,6 @@ function toggleSections(hasName) {
     
     document.getElementById('name-instructions').style.visibility = nameInstructionsVisibility;
     document.getElementById('status-display').style.visibility = visibility;
-    document.getElementById('answer-section').style.visibility = visibility;
     document.getElementById('buttons-section').style.visibility = visibility;
     document.getElementById('poker-section').style.visibility = visibility;
 }

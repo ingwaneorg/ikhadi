@@ -5,6 +5,10 @@ import os
 import json
 from datetime import datetime
 
+# Get the version number
+from version import __version__
+
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
@@ -138,43 +142,6 @@ def update_learner(room_code):
     save_db_json()
     return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
 
-@app.route('/<room_code>/clear-status', methods=['POST'])
-def clear_all_status(room_code):
-    room_code = room_code.lower()
-    
-    if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
-    
-    if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
-    
-    # Clear all learner statuses
-    for learner in rooms[room_code]['learners'].values():
-        learner['status'] = ''
-        learner['isActive'] = True
-        learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
-    
-    save_db_json()
-    return jsonify({'success': True})
-
-@app.route('/<room_code>/reset-learners', methods=['POST'])
-def reset_learners(room_code):
-    room_code = room_code.lower()
-    
-    if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
-    
-    if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
-
-    # Make all learners in the room inactive
-    for learner in rooms[room_code]['learners'].values():
-        learner['isActive'] = False
-        learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
-        
-    save_db_json()
-    return jsonify({'success': True})
-
 @app.route('/<room_code>/poker')
 def poker_page(room_code):
     show_values = request.args.get('show', 'false').lower() == 'true'    
@@ -292,29 +259,9 @@ def poker_page(room_code):
             average_text=avg_text,
             )
 
-@app.route("/api")
-def block_api_root():
-    return "Access to /api is not allowed", 403
-
-@app.route("/api/rooms")
-def api_rooms():
-    room_summaries = []
-
-    for room_code, room in rooms.items():
-        learners = room.get('learners', {}).values()
-        active_count = sum(1 for learner in learners if learner.get('isActive'))
-        room_summaries.append({
-            'code': room_code,
-            'description': room.get('description', ''),
-            'active_learners': active_count,
-            'created_date': room.get('createdDate'),
-        })
-
-    return jsonify(room_summaries)
-
-@app.route('/about')
-def about():
-    return render_template('about.html')
+@app.route('/version')
+def version():
+    return __version__, 200
 
 @app.context_processor
 def utility_processor():

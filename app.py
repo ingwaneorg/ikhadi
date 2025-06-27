@@ -267,9 +267,15 @@ def block_api_root():
 def api_rooms():
     return jsonify(rooms)
 
-@app.route('/version')
-def version():
-    return jsonify(version=__version__)
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({
+        'version': __version__,
+        'status': 'healthy',
+        'service': 'ikhadi',
+        'rooms': f'{len(rooms)}/{MAX_ROOMS}',
+    })
 
 @app.context_processor
 def utility_processor():

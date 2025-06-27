@@ -120,6 +120,7 @@ if gcloud run deploy "$SERVICE_NAME" \
     
     print_success "Service available at: $SERVICE_URL"
     
+    
     # Save URL for reference
     echo "$SERVICE_URL" > last_deployment_url.txt
     print_status "Service URL saved to: last_deployment_url.txt"
@@ -129,6 +130,13 @@ else
     exit 1
 fi
 
-print_success "Deployment complete!"
+# Get version number
+if [ ! -f "version.py" ]; then
+    version=""
+else
+    version=$(cat version.py | grep "__version__" | cut -d" " -f3 | tr -d '"')
+fi
+
+print_success "${version} Deployment complete!"
 
 #EOF

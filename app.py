@@ -259,9 +259,17 @@ def poker_page(room_code):
             average_text=avg_text,
             )
 
+@app.route("/api")
+def block_api_root():
+    return "Access to /api is not allowed", 403
+
+@app.route("/api/rooms")
+def api_rooms():
+    return jsonify(rooms)
+
 @app.route('/version')
 def version():
-    return __version__, 200
+    return jsonify(version=__version__)
 
 @app.context_processor
 def utility_processor():

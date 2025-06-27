@@ -273,6 +273,7 @@ def health_check():
     return jsonify({
         'rooms'  : f'{len(rooms)}/{MAX_ROOMS}',
         'service': 'ikhadi',
+        'size db': len(json.dumps(rooms).encode("utf-8")),
         'status' : 'healthy',
         'version': __version__,
     })

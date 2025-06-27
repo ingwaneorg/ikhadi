@@ -259,22 +259,22 @@ def poker_page(room_code):
             average_text=avg_text,
             )
 
-@app.route("/api")
+@app.route('/api')
 def block_api_root():
-    return "Access to /api is not allowed", 403
+    return 'Access to /api is not allowed', 403
 
-@app.route("/api/rooms")
+@app.route('/api/rooms')
 def api_rooms():
     return jsonify(rooms)
 
-@app.route('/health', methods=['GET'])
+@app.route('/health')
 def health_check():
     """Health check endpoint."""
     return jsonify({
-        'version': __version__,
-        'status': 'healthy',
+        'rooms'  : f'{len(rooms)}/{MAX_ROOMS}',
         'service': 'ikhadi',
-        'rooms': f'{len(rooms)}/{MAX_ROOMS}',
+        'status' : 'healthy',
+        'version': __version__,
     })
 
 @app.context_processor

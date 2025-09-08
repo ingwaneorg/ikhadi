@@ -37,6 +37,19 @@ def get_status_symbol(status):
     
     return status_map.get(status, f'<b>{status}</b>')
 
+def clear_estimates(room_code):
+    """Clear all estimates for a given room code"""
+
+    if not validate_room_code(room_code):
+        return False
+        
+    for learner in rooms[room_code]['learners'].values():
+        # Update lastCommunication for any interaction
+        learner['status'] = ''
+        learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
+
+    return True
+
 @app.route('/')
 def intro():
     return render_template('intro.html')
@@ -142,21 +155,10 @@ def update_learner(room_code):
     save_db_json()
     return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
 
-@app.route('/<room_code>/clear')
-def clear_estimates(room_code):
-    """Clear all estimates for a given room code"""
-
-    if not validate_room_code(room_code):
-        return "Invalid room code", 400
-        
-    for learner in rooms[room_code]['learners'].values():
-        print(learner)
-
-
 @app.route('/<room_code>/poker')
 def poker_page(room_code):
     """Show estimates for a room and the stats for the esimates"""
-    show_values = request.args.get('show', 'false').lower() == 'true'    
+    show_param = request.args.get('show', 'false').lower()
 
     if not validate_room_code(room_code):
         return "Invalid room code", 400
@@ -175,6 +177,13 @@ def poker_page(room_code):
             'learners': {},  # Dictionary, not array
             'createdDate': datetime.now().isoformat() + 'Z'
         }
+
+    # See if the user wants the estimates cleared
+    if show_param == 'clear':
+        clear_estimates(room_code)
+        show_values = False
+    else:
+        show_values = (show_param == 'true')    
 
     # Get poker values (numeric responses)
     poker_values = []
@@ -256,7 +265,7 @@ def poker_page(room_code):
             learner_estimates.append({"name": "Mnotsure","estimate": "not-sure"})
             learner_estimates.append({"name": "Mbreak"  ,"estimate": "break"})
             #learner_estimates.append({"name": "Mother" ,"estimate": "other"})
-            for i in range(1):
+            for i in range(3):
                 estimate = list(ALLOWED_ESTIMATES)[i]
                 learner_estimates.append({"name": f"Mock{i+1}","estimate": estimate})
 

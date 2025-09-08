@@ -142,8 +142,20 @@ def update_learner(room_code):
     save_db_json()
     return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
 
+@app.route('/<room_code>/clear')
+def clear_estimates(room_code):
+    """Clear all estimates for a given room code"""
+
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    for learner in rooms[room_code]['learners'].values():
+        print(learner)
+
+
 @app.route('/<room_code>/poker')
 def poker_page(room_code):
+    """Show estimates for a room and the stats for the esimates"""
     show_values = request.args.get('show', 'false').lower() == 'true'    
 
     if not validate_room_code(room_code):

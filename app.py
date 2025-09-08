@@ -20,6 +20,12 @@ ALLOWED_ESTIMATES = {'0', '0.5', '1', '2', '3', '5', '8', '13', '20'}
 # In-memory storage
 rooms = {}
 
+# Save the database if in DEBUG mode
+def save_db_json():
+    if app.debug:
+        with open('db.json', 'w') as f:
+            json.dump(rooms, f, indent=2, default=str)
+
 def validate_room_code(room_code):
     """Validate room code: only letters, numbers, hyphens, 2-10 characters"""
     return bool(re.match(r'^[A-Za-z0-9-]{2,10}$', room_code))
@@ -46,8 +52,10 @@ def clear_estimates(room_code):
     for learner in rooms[room_code]['learners'].values():
         # Update lastCommunication for any interaction
         learner['status'] = ''
+        learner['isActive'] = False
         learner['lastCommunication'] = datetime.now().isoformat() + 'Z'
 
+    save_db_json()
     return True
 
 @app.route('/')
@@ -115,12 +123,6 @@ def learner_page(room_code):
                          learner=learner,
                          learner_id=learner_id)
 
-# Save the database if in DEBUG mode
-def save_db_json():
-    if app.debug:
-        with open('db.json', 'w') as f:
-            json.dump(rooms, f, indent=2, default=str)
-
 @app.route('/<room_code>/update', methods=['POST'])
 def update_learner(room_code):
     room_code = room_code.lower()
@@ -151,7 +153,7 @@ def update_learner(room_code):
     
     if 'status' in data:
         learner['status'] = data['status']
-        
+
     save_db_json()
     return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
 
